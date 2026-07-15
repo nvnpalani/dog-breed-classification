@@ -1,0 +1,13 @@
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Babel==4.0.0
+Flask-Limiter==3.5.0
+Werkzeug==3.0.1
+Pillow==10.1.0
+numpy==1.26.2
+opencv-python==4.8.1.78
+imagehash==4.3.1
+tensorflow==2.21.0
+scipy==1.11.4
+gunicorn  
+Flask-Cors==5.0.0

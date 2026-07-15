@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BreedID - Breed Identification</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #1e7e34;
+            --primary-hover: #155d27;
+            --text-dark: #1f2937;
+            --text-gray: #4b5563;
+            --text-light: #9ca3af;
+            --bg-light: #f8fafc;
+            --white: #ffffff;
+            --border-color: #e5e7eb;
+            --footer-bg: #114324;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        section {
+            width: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+            background-image: url("{{ url_for('static', filename='website_bg.png') }}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-white {
+            background-color: var(--white);
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text-dark);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .nav-links li a {
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 0.95rem;
+            position: relative;
+        }
+
+        .nav-links li a.active {
+            color: var(--text-dark);
+        }
+
+        .nav-links li a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background-color: var(--primary-color);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            background-color: transparent;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.85) 50%, rgba(255, 255, 255, 0.3) 100%);
+            z-index: 1;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 150px;
+            background: linear-gradient(to top, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 100%);
+            z-index: 1;
+        }
+
+        .hero .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-content {
+            flex: 1;
+            max-width: 500px;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .hero-content p {
+            font-size: 1.1rem;
+            color: var(--text-gray);
+            margin-bottom: 30px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .hero-image {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            position: relative;
+        }
+
+        .hero-image-placeholder {
+            width: 480px;
+            height: 380px;
+            background-color: #cbd5e1;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 4px solid white;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-card {
+            position: absolute;
+            bottom: -25px;
+            left: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            width: calc(100% - 40px);
+            z-index: 10;
+        }
+
+        .hero-card-left h4 {
+            font-size: 0.8rem;
+            color: var(--text-dark);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .hero-card-left h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+
+        .hero-card-left p {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+        }
+
+        .hero-card-right {
+            background: #ecfdf5;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .hero-card-right h2 {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .hero-card-right p {
+            font-size: 0.8rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Section Headings */
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            color: var(--text-dark);
+            position: relative;
+            display: inline-block;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .section-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        /* Features Section */
+        .features {
+            background-color: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            width: 100%;
+            padding: 100px 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: var(--white);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            color: white;
+            font-size: 30px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        .feature-card p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            background-color: rgba(248, 250, 252, 0.7);
+            backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            width: 100%;
+            padding: 100px 0;
+        }
+
+        .how-it-works-content {
+            display: flex;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .steps-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            position: relative;
+        }
+
+        /* Dashed connecting line */
+        .steps-container::before {
+            content: '';
+            position: absolute;
+            top: 45px;
+            bottom: 45px;
+            left: 45px;
+            width: 1px;
+            border-left: 2px dashed #9ca3af;
+            z-index: 1;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            text-align: left;
+            position: relative;
+            z-index: 2;
+            gap: 20px;
+        }
+
+        .step-icon-wrapper {
+            width: 90px;
+            height: 90px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .step-number {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .step h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .step p {
+            color: var(--text-gray);
+            font-size: 0.9rem;
+        }
+
+        /* About Section */
+        .about {
+            background-color: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            width: 100%;
+            padding: 100px 0;
+        }
+
+        .about .container {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+        }
+
+        .about-content {
+            flex: 1;
+        }
+
+        .about-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            font-weight: 700;
+        }
+
+        .about-content p {
+            font-size: 1rem;
+            color: var(--text-gray);
+            margin-bottom: 30px;
+        }
+
+        .about-image {
+            flex: 1;
+        }
+
+        .about-image-placeholder {
+            width: 100%;
+            height: 350px;
+            background-color: #cbd5e1;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Final Section Wrapper */
+        .final-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        /* CTA Banner */
+        .cta-banner {
+            background-color: rgba(248, 250, 252, 0.7);
+            backdrop-filter: blur(25px);
+            border-top: 1px solid rgba(255, 255, 255, 0.5);
+            width: 100%;
+            padding: 80px 0;
+            flex: 1;
+            /* take up remaining space above footer */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .cta-banner .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-light);
+            padding: 30px 40px;
+            border-radius: 12px;
+        }
+
+        .cta-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .cta-icon {
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .cta-text h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .cta-text p {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--footer-bg);
+            color: var(--white);
+            padding: 60px 0 20px 0;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1.5fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .footer-col h4 {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .footer-col p {
+            color: #d1d5db;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .footer-links-list {
+            list-style: none;
+        }
+
+        .footer-links-list li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links-list a {
+            color: #d1d5db;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links-list a:hover {
+            color: var(--white);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-icon {
+            color: #d1d5db;
+            font-size: 1.2rem;
+            transition: color 0.3s;
+        }
+
+        .social-icon:hover {
+            color: white;
+        }
+
+        .contact-info li {
+            color: #d1d5db;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #d1d5db;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <a href="{{ url_for('index') }}" class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-dog"></i></div>
+                <div style="display: flex; flex-direction: column; line-height: 1.1;">
+                    <span>BreedID</span>
+                    <span style="font-size: 0.7rem; font-weight: 400; color: var(--text-gray);">Breed
+                        Identification</span>
+                </div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#hero" class="active">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <a href="{{ url_for('login') }}" class="btn btn-outline">Login</a>
+                <a href="{{ url_for('signup') }}" class="btn btn-primary">Sign Up</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="hero" style="padding-top: 60px; padding-bottom: 60px;">
+        <style>
+            .ai-scanner-container {
+                position: relative;
+                width: 320px;
+                height: 320px;
+                border-radius: 24px;
+                overflow: hidden;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+                border: 6px solid white;
+                background: white;
+            }
+
+            .ai-scanner-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 18px;
+            }
+
+            .scanner-line {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 3px;
+                background: #10b981;
+                box-shadow: 0 0 15px #10b981, 0 0 30px #10b981;
+                animation: scan 3s infinite ease-in-out alternate;
+                z-index: 10;
+            }
+
+            .scanner-overlay {
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(to bottom, rgba(16, 185, 129, 0.1), transparent);
+                animation: scan-overlay 3s infinite ease-in-out alternate;
+                pointer-events: none;
+            }
+
+            @keyframes scan {
+                0% {
+                    top: 0%;
+                }
+
+                100% {
+                    top: 98%;
+                }
+            }
+
+            @keyframes scan-overlay {
+                0% {
+                    height: 0%;
+                }
+
+                100% {
+                    height: 100%;
+                }
+            }
+
+            .bottom-marquee {
+                width: 100%;
+                overflow: hidden;
+                white-space: nowrap;
+                margin-top: 40px;
+            }
+
+            .bottom-marquee-inner {
+                display: inline-block;
+                animation: scroll-left 20s linear infinite;
+            }
+
+            @keyframes scroll-left {
+                0% {
+                    transform: translateX(0);
+                }
+
+                100% {
+                    transform: translateX(-50%);
+                }
+            }
+
+            .model-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 12px;
+                background: white;
+                padding: 8px 16px;
+                border-radius: 50px;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+                margin-right: 20px;
+                border: 1px solid var(--border-color);
+            }
+
+            .model-badge img {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+        </style>
+        <div class="container" style="display: flex; flex-direction: column; gap: 40px;">
+            <!-- Top part: Text & Images -->
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 30px;">
+                <div class="hero-content"
+                    style="max-width: 550px; padding: 40px; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(15px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05); position: relative; z-index: 10;">
+                    <div class="stats-badge"
+                        style="display: inline-flex; align-items: center; gap: 8px; background: rgba(22, 163, 74, 0.15); color: #16a34a; padding: 8px 16px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; margin-bottom: 25px;">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span>AI Powered Diagnostics</span>
+                    </div>
+                    <h1
+                        style="font-size: 3.8rem; font-weight: 800; color: var(--text-dark); margin-bottom: 20px; line-height: 1.1; letter-spacing: -1px;">
+                        Breed Identification<br>System</h1>
+                    <p
+                        style="font-size: 1.15rem; color: #4b5563; margin-bottom: 35px; line-height: 1.6; font-weight: 500;">
+                        Detect breed categorys using Artificial Intelligence and get highly accurate results in seconds.
+                    </p>
+                    <div class="hero-buttons" style="display: flex; gap: 15px;">
+                        <a href="#how-it-works" class="btn btn-primary"
+                            style="padding: 12px 28px; font-size: 1.05rem; box-shadow: 0 10px 20px rgba(22, 163, 74, 0.2);">Try
+                            Live Demo</a>
+                        <a href="#about" class="btn btn-white"
+                            style="padding: 12px 28px; font-size: 1.05rem; background: rgba(255, 255, 255, 0.9);">Learn
+                            More</a>
+                    </div>
+                </div>
+
+                <div class="hero-image-right"
+                    style="display: flex; align-items: center; justify-content: center; position: relative;">
+                    <div class="ai-scanner-container">
+                        <img src="{{ url_for('static', filename='demo_images/german_shepherd.png') }}"
+                            class="ai-scanner-img">
+                        <div class="scanner-line"></div>
+                        <div class="scanner-overlay"></div>
+                    </div>
+
+                    <div
+                        style="position: absolute; bottom: -15px; right: -20px; background: white; padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; z-index: 20;">
+                        <div
+                            style="width: 30px; height: 30px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <div>
+                            <p style="font-size: 0.75rem; color: var(--text-gray); margin: 0; font-weight: 600;">
+                                Prediction</p>
+                            <p style="font-size: 0.95rem; color: var(--text-dark); margin: 0; font-weight: 700;">German Shepherd</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom part: Dashboard Stats Bar -->
+            <div class="dashboard-stats-bar"
+                style="background: white; border-radius: 20px; padding: 30px 40px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.06); border: 1px solid var(--border-color); margin-top: 10px;">
+                <!-- Stat 1 -->
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div
+                        style="width: 55px; height: 55px; background: #f0fdf4; color: #16a34a; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        <i class="fa-solid fa-images"></i>
+                    </div>
+                    <div>
+                        <p
+                            style="font-size: 0.8rem; color: var(--text-gray); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Total Images</p>
+                        <h3 style="font-size: 1.6rem; color: var(--text-dark); font-weight: 800; margin: 2px 0;">{{
+                            total_images }}</h3>
+                        <p style="font-size: 0.75rem; color: #16a34a; font-weight: 500;">+ Live Dataset</p>
+                    </div>
+                </div>
+                <!-- Divider -->
+                <div style="width: 1px; height: 50px; background: var(--border-color);"></div>
+                <!-- Stat 2 -->
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div
+                        style="width: 55px; height: 55px; background: #f0fdf4; color: #16a34a; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        <i class="fa-solid fa-cube"></i>
+                    </div>
+                    <div>
+                        <p
+                            style="font-size: 0.8rem; color: var(--text-gray); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Total Models</p>
+                        <h3 style="font-size: 1.6rem; color: var(--text-dark); font-weight: 800; margin: 2px 0;">{{
+                            total_models }}</h3>
+                        <p style="font-size: 0.75rem; color: #16a34a; font-weight: 500;">Active AI</p>
+                    </div>
+                </div>
+                <!-- Divider -->
+                <div style="width: 1px; height: 50px; background: var(--border-color);"></div>
+                <!-- Stat 3 -->
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div
+                        style="width: 55px; height: 55px; background: #f0fdf4; color: #16a34a; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <p
+                            style="font-size: 0.8rem; color: var(--text-gray); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+                            Model Accuracy</p>
+                        <h3 style="font-size: 1.6rem; color: var(--text-dark); font-weight: 800; margin: 2px 0;">{{
+                            avg_accuracy }}%</h3>
+                        <p style="font-size: 0.75rem; color: #16a34a; font-weight: 500;">Average Rate</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Scrolling Models -->
+            <div class="bottom-marquee">
+                <div class="bottom-marquee-inner">
+                    <!-- Original -->
+                    <div class="model-badge">
+                        <img src="{{ url_for('static', filename='demo_images/golden_retriever.png') }}">
+                        <span style="font-weight: 600; color: var(--text-dark); font-size: 0.95rem;">Golden Retriever</span>
+                    </div>
+                    <div class="model-badge">
+                        <img src="{{ url_for('static', filename='demo_images/german_shepherd.png') }}">
+                        <span style="font-weight: 600; color: var(--text-dark); font-size: 0.95rem;">German Shepherd</span>
+                    </div>
+                    <div class="model-badge">
+                        <img src="{{ url_for('static', filename='demo_images/beagle.png') }}">
+                        <span style="font-weight: 600; color: var(--text-dark); font-size: 0.95rem;">Beagle</span>
+                    </div>
+
+                    <!-- Duplicates for scrolling -->
+                    <div class="model-badge">
+                        <img src="{{ url_for('static', filename='demo_images/golden_retriever.png') }}">
+                        <span style="font-weight: 600; color: var(--text-dark); font-size: 0.95rem;">Golden Retriever</span>
+                    </div>
+                    <div class="model-badge">
+                        <img src="{{ url_for('static', filename='demo_images/german_shepherd.png') }}">
+                        <span style="font-weight: 600; color: var(--text-dark); font-size: 0.95rem;">German Shepherd</span>
+                    </div>
+                    <div class="model-badge">
+                        <img src="{{ url_for('static', filename='demo_images/beagle.png') }}">
+                        <span style="font-weight: 600; color: var(--text-dark); font-size: 0.95rem;">Beagle</span>
+                    </div>
+
+                    <!-- Triple duplicates for seamless scroll on wide screens -->
+                    <div class="model-badge">
+                        <img src="{{ url_for('static', filename='demo_images/golden_retriever.png') }}">
+                        <span style="font-weight: 600; color: var(--text-dark); font-size: 0.95rem;">Golden Retriever</span>
+                    </div>
+                    <div class="model-badge">
+                        <img src="{{ url_for('static', filename='demo_images/german_shepherd.png') }}">
+                        <span style="font-weight: 600; color: var(--text-dark); font-size: 0.95rem;">German Shepherd</span>
+                    </div>
+                    <div class="model-badge">
+                        <img src="{{ url_for('static', filename='demo_images/beagle.png') }}">
+                        <span style="font-weight: 600; color: var(--text-dark); font-size: 0.95rem;">Beagle</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Features</h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h3>Upload Image</h3>
+                    <p>Upload a clear dog image<br>in JPG, PNG or JPEG format.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h3>AI Detection</h3>
+                    <p>Our AI model analyzes the image<br>and detects the breed.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon-wrapper">
+                        <i class="fa-solid fa-chart-column"></i>
+                    </div>
+                    <h3>Instant Result</h3>
+                    <p>Get accurate results with breed<br>details and information.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+            </div>
+            <div class="how-it-works-content">
+                <div class="steps-container">
+                    <div class="step">
+                        <div class="step-icon-wrapper">
+                            <div class="step-number">1</div>
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <div>
+                            <h3>Upload Image</h3>
+                            <p>Upload a clear image of<br>the dog.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon-wrapper">
+                            <div class="step-number">2</div>
+                            <i class="fa-solid fa-brain"></i>
+                        </div>
+                        <div>
+                            <h3>AI Analysis</h3>
+                            <p>AI model processes the image<br>and identifies the breed.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-icon-wrapper">
+                            <div class="step-number">3</div>
+                            <i class="fa-regular fa-file-lines"></i>
+                        </div>
+                        <div>
+                            <h3>View Result</h3>
+                            <p>View breed name, confidence score<br>and related information.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="flex: 1; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid var(--border-color);">
+                    <div style="margin-bottom: 25px;">
+                        <span
+                            style="font-size: 0.8rem; font-weight: bold; color: var(--primary-color); text-transform: uppercase; letter-spacing: 1px;">Live
+                            Demonstration</span>
+                        <h3 style="font-size: 1.3rem; font-weight: 700; color: var(--text-dark); margin-top: 5px;">Test
+                            the AI Model</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-gray); margin-top: 5px;">Guest Limit: <span
+                                id="guest-count" style="font-weight: bold; color: var(--primary-color);">3</span> Images
+                        </p>
+                    </div>
+
+                    <form id="demo-upload-form" style="display: flex; flex-direction: column; gap: 15px;">
+                        <div style="border: 2px dashed var(--border-color); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s ease; position: relative;"
+                            id="demo-drop-zone"
+                            onclick="if(!this.classList.contains('result-mode')) document.getElementById('demo-file-input').click()">
+                            <img id="demo-preview"
+                                style="display: none; width: 100%; max-height: 250px; object-fit: contain; margin-bottom: 10px; border-radius: 8px;">
+                            <div id="demo-placeholder">
+                                <img src="{{ url_for('static', filename='empty_box.png') }}"
+                                    style="width: 100px; height: 100px; object-fit: contain; margin-bottom: 15px; border-radius: 12px; mix-blend-mode: multiply;">
+                                <p style="font-size: 0.95rem; color: var(--text-dark); font-weight: 700;">Click to
+                                    Upload or Drag & Drop</p>
+                            </div>
+
+                            <!-- Prediction Result Area (moved inside the box) -->
+                            <div id="demo-result-area"
+                                style="display: none; margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; text-align: left;">
+                                <div style="display: flex; gap: 15px; align-items: center;">
+                                    <div
+                                        style="width: 50px; height: 50px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                                        <i class="fa-solid fa-check-double"></i>
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <h4 id="demo-result-name"
+                                            style="font-size: 1.2rem; color: var(--text-dark); font-weight: 800; text-transform: uppercase;">
+                                            Result</h4>
+                                        <p style="font-size: 0.95rem; color: var(--text-gray); margin-top: 3px;">Breed:
+                                            <span id="demo-breed-name"
+                                                style="color: var(--text-dark); font-weight: 700;">--</span> |
+                                            Confidence: <span id="demo-result-conf"
+                                                style="color: var(--primary-color); font-weight: bold;">--%</span></p>
+                                    </div>
+                                </div>
+                                <div id="demo-top-results"
+                                    style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0; display: none;">
+                                    <h5
+                                        style="font-size: 0.9rem; color: var(--text-dark); font-weight: 700; margin-bottom: 10px;">
+                                        Related Classes:</h5>
+                                    <div id="demo-top-results-list"
+                                        style="display: flex; flex-direction: column; gap: 8px;">
+                                        <!-- populated by js -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="file" id="demo-file-input" name="file" accept="image/*" style="display: none;"
+                                onchange="previewDemoImage(this)">
+                        </div>
+                        <button type="submit" id="demo-submit-btn" class="btn btn-primary"
+                            style="width: 100%; padding: 12px;">Predict Category</button>
+                        <button type="button" id="demo-reset-btn" class="btn btn-outline"
+                            style="width: 100%; padding: 12px; display: none;" onclick="resetDemoUI()">Upload Another
+                            Image</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Limit Modal -->
+    <div id="limit-modal"
+        style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 40px; border-radius: 16px; max-width: 400px; text-align: center;">
+            <div
+                style="width: 60px; height: 60px; background: #fee2e2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 20px auto;">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h3 style="font-size: 1.5rem; margin-bottom: 10px; color: var(--text-dark);">Demo Limit Reached!</h3>
+            <p style="color: var(--text-gray); margin-bottom: 25px;">You have successfully tested 3 images. Please login
+                or sign up to get unlimited access and save your prediction history.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <a href="{{ url_for('login') }}" class="btn btn-primary" style="flex: 1;">Login</a>
+                <a href="{{ url_for('signup') }}" class="btn btn-outline" style="flex: 1;">Sign Up</a>
+            </div>
+            <button onclick="document.getElementById('limit-modal').style.display='none'"
+                style="margin-top: 15px; background: none; border: none; color: var(--text-gray); cursor: pointer; text-decoration: underline;">Close</button>
+        </div>
+    </div>
+
+    <!-- About Project Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="about-content">
+                <h2>About Project</h2>
+                <p>Breed Identification System helps users to identify dog breeds instantly using Artificial
+                    Intelligence. Fast detection<br>helps in recognizing breeds accurately.</p>
+                <a href="#" class="btn btn-primary">Learn More</a>
+            </div>
+            <div class="about-image">
+                <img src="{{ url_for('static', filename='about_farm_image.png') }}"
+                    style="width: 100%; height: auto; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+            </div>
+        </div>
+    </section>
+
+    <!-- Final Section (CTA + Footer) to fix scroll snapping -->
+    <div class="final-section">
+
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-col">
+                        <div class="footer-logo">
+                            <div class="logo-icon" style="background-color: white; color: var(--footer-bg);"><i
+                                    class="fa-solid fa-dog"></i></div>
+                            <div style="display: flex; flex-direction: column; line-height: 1.1;">
+                                <span>BreedID</span>
+                                <span style="font-size: 0.7rem; font-weight: 400; color: #d1d5db;">Breed
+                                    Identification</span>
+                            </div>
+                        </div>
+                        <p>AI-Powered Breed Identification<br>System for Dogs.</p>
+                        <div class="social-icons" style="display: flex; gap: 15px; margin-top: 15px;">
+                            <a href="#" style="color: white; font-size: 1.2rem;"><i
+                                    class="fa-brands fa-facebook-f"></i></a>
+                            <a href="#" style="color: white; font-size: 1.2rem;"><i
+                                    class="fa-brands fa-twitter"></i></a>
+                            <a href="#" style="color: white; font-size: 1.2rem;"><i
+                                    class="fa-brands fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Quick Links</h4>
+                        <ul class="footer-links-list" style="list-style: none; padding: 0;">
+                            <li style="margin-bottom: 10px;"><a href="#hero"
+                                    style="color: #d1d5db; text-decoration: none;">Home</a></li>
+                            <li style="margin-bottom: 10px;"><a href="#about"
+                                    style="color: #d1d5db; text-decoration: none;">About</a></li>
+                            <li style="margin-bottom: 10px;"><a href="#features"
+                                    style="color: #d1d5db; text-decoration: none;">Features</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Resources</h4>
+                        <ul class="footer-links-list" style="list-style: none; padding: 0;">
+                            <li style="margin-bottom: 10px;"><a href="#"
+                                    style="color: #d1d5db; text-decoration: none;">Blog</a></li>
+                            <li style="margin-bottom: 10px;"><a href="#"
+                                    style="color: #d1d5db; text-decoration: none;">Help Center</a></li>
+                            <li style="margin-bottom: 10px;"><a href="#"
+                                    style="color: #d1d5db; text-decoration: none;">Privacy Policy</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>Contact Us</h4>
+                        <ul class="footer-links-list contact-info"
+                            style="list-style: none; padding: 0; color: #d1d5db;">
+                            <li style="margin-bottom: 10px;"><i class="fa-solid fa-envelope"
+                                    style="margin-right: 10px;"></i> support@breedid.com</li>
+                            <li style="margin-bottom: 10px;"><i class="fa-solid fa-phone"
+                                    style="margin-right: 10px;"></i> +91 1234567890</li>
+                            <li style="margin-bottom: 10px;"><i class="fa-solid fa-location-dot"
+                                    style="margin-right: 10px;"></i> Tamil Nadu, India</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom"
+                    style="text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); color: #9ca3af; font-size: 0.9rem;">
+                    <p>&copy; 2026 Breed Identification System. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div> <!-- End Final Section -->
+
+    <script>
+        function previewDemoImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('demo-preview').src = e.target.result;
+                    document.getElementById('demo-preview').style.display = 'block';
+                    document.getElementById('demo-placeholder').style.display = 'none';
+                    document.getElementById('demo-result-area').style.display = 'none';
+                    document.getElementById('demo-submit-btn').style.display = 'block';
+                    document.getElementById('demo-reset-btn').style.display = 'none';
+                    document.getElementById('demo-drop-zone').classList.remove('result-mode');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function resetDemoUI() {
+            document.getElementById('demo-file-input').value = "";
+            document.getElementById('demo-preview').style.display = 'none';
+            document.getElementById('demo-placeholder').style.display = 'block';
+            document.getElementById('demo-result-area').style.display = 'none';
+            document.getElementById('demo-submit-btn').style.display = 'block';
+            document.getElementById('demo-reset-btn').style.display = 'none';
+            document.getElementById('demo-drop-zone').classList.remove('result-mode');
+        }
+
+        document.getElementById('demo-upload-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('demo-file-input');
+            if (!fileInput.files[0]) {
+                alert("Please select an image first.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const btn = document.getElementById('demo-submit-btn');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Analyzing...';
+            btn.disabled = true;
+
+            fetch('/api/detect', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    btn.innerHTML = 'Predict Category';
+                    btn.disabled = false;
+
+                    if (data.status === 'error' && data.limit_reached) {
+                        document.getElementById('limit-modal').style.display = 'flex';
+                    } else if (data.status === 'success') {
+                        // Fix: The backend returns the data inside a 'data' object
+                        let resultName = data.data ? data.data.result_name : (data.prediction || 'Unknown');
+                        let confidence = data.data ? data.data.result_confidence : (data.confidence || 0);
+                        let breedName = data.data ? (data.data.breed_name || 'Unknown') : 'Unknown';
+
+                        document.getElementById('demo-result-name').textContent = resultName.replace(/_/g, ' ');
+                        document.getElementById('demo-result-conf').textContent = parseFloat(confidence).toFixed(2) + '%';
+                        document.getElementById('demo-breed-name').textContent = breedName;
+
+                        const topResultsList = document.getElementById('demo-top-results-list');
+                        topResultsList.innerHTML = '';
+                        if (data.data && data.data.top_3_results && data.data.top_3_results.length > 0) {
+                            data.data.top_3_results.forEach(res => {
+                                const percentage = parseFloat(res.confidence).toFixed(2);
+                                const html = `
+                                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem;">
+                                    <span style="color: var(--text-gray); font-weight: 500; text-transform: capitalize;">${res.name.replace(/_/g, ' ')}</span>
+                                    <div style="display: flex; align-items: center; gap: 10px; width: 60%;">
+                                        <div style="flex: 1; height: 6px; background: #e2e8f0; border-radius: 3px; overflow: hidden;">
+                                            <div style="width: ${percentage}%; height: 100%; background: var(--primary-color); border-radius: 3px;"></div>
+                                        </div>
+                                        <span style="color: var(--text-dark); font-weight: 600; width: 45px; text-align: right;">${percentage}%</span>
+                                    </div>
+                                </div>
+                            `;
+                                topResultsList.innerHTML += html;
+                            });
+                            document.getElementById('demo-top-results').style.display = 'block';
+                        } else {
+                            document.getElementById('demo-top-results').style.display = 'none';
+                        }
+
+                        // Show result inside drop zone, swap buttons
+                        document.getElementById('demo-result-area').style.display = 'block';
+                        document.getElementById('demo-submit-btn').style.display = 'none';
+                        document.getElementById('demo-reset-btn').style.display = 'block';
+                        document.getElementById('demo-drop-zone').classList.add('result-mode');
+
+                        let limitText = document.getElementById('guest-count');
+                        let currentCount = parseInt(limitText.textContent);
+                        if (currentCount > 0) limitText.textContent = currentCount - 1;
+                    } else {
+                        alert(data.message || "Error analyzing image.");
+                    }
+                })
+                .catch(error => {
+                    btn.innerHTML = 'Predict Category';
+                    btn.disabled = false;
+                    alert("An error occurred connecting to the server.");
+                });
+        });
+    </script>
+</body>
+
+</html>

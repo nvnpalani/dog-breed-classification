@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+
+models/
+dog_datasets/
+user_uploads/
+
+*.keras
+*.h5
+*.pth
+*.pt

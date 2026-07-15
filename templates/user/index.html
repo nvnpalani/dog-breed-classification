@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> Image Detection </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <style id="admin-styles">
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            background: #f8fafc;
+        }
+
+        {% if is_deployed %}
+        .admin-sidebar {
+            display: none !important;
+        }
+
+        .admin-topbar {
+            display: none !important;
+        }
+
+        .admin-main {
+            margin-left: 0 !important;
+            width: 100% !important;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-content {
+            padding: 2rem;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 0 !important;
+        }
+        {% else %}
+        .admin-sidebar {
+            width: 260px;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+        .admin-main {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-topbar {
+            height: 70px;
+            background: white;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            position: fixed;
+            top: 0;
+            left: 260px;
+            right: 0;
+            z-index: 500;
+            box-sizing: border-box;
+        }
+
+        .admin-content {
+            padding: 2rem;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 70px;
+        }
+        {% endif %}
+
+        .sidebar-logo {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--accent-forest);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .sidebar-menu {
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-grow: 1;
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .sidebar-link:hover,
+        .sidebar-link.active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-forest);
+            font-weight: 600;
+        }
+
+        .app-header {
+            display: none !important;
+        }
+
+        .main-content {
+            margin: 0 auto;
+            padding: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .card-container {
+            max-width: 900px !important;
+            width: 100%;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading Spinner Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p class="loading-text">Analyzing your image...</p>
+    </div>
+
+    <div class="admin-sidebar">
+        <div class="sidebar-logo">
+            <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="url(#bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px;">
+                <defs>
+                    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#10b981" />
+                        <stop offset="100%" stop-color="#047857" />
+                    </linearGradient>
+                </defs>
+                <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5"/>
+                <path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.855-1.45-2.239-2.5"/>
+                <path d="M8 14v.5"/>
+                <path d="M16 14v.5"/>
+                <path d="M11.25 16.25h1.5L12 17l-.75-.75Z"/>
+                <path d="M4.42 11.247A13.152 13.152 0 0 0 4 14.556C4 18.728 7.582 21 12 21s8-2.272 8-6.444c0-1.061-.162-2.2-.493-3.309m-9.243-6.082A8.801 8.801 0 0 1 12 5c.78 0 1.5.108 2.161.306"/>
+            </svg>
+            Dog Breed AI
+        </div>
+        <div
+            style="font-size: 0.7rem; color: var(--text-muted); font-weight: bold; padding: 1rem 1.5rem 0.5rem; text-transform: uppercase;">
+            User Panel</div>
+        <div class="sidebar-menu">
+
+            <a href="{{ url_for('detect') }}" class="sidebar-link active">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                Detect Image
+            </a>
+        </div>
+        <div class="sidebar-menu" style="border-top: 1px solid var(--glass-border); flex-grow: 0;">
+            <a href="#" class="sidebar-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                Settings
+            </a>
+            <a href="{{ url_for('logout') }}" class="sidebar-link" style="color: #ef4444;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Logout
+            </a>
+        </div>
+    </div>
+    <div class="admin-main">
+        <div class="admin-topbar">
+            <div></div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-weight: 600; color: var(--text-main);">{{ session.get('username', 'User') }}</span>
+                <div
+                    style="width: 35px; height: 35px; border-radius: 50%; background: var(--accent-forest); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer;">
+                    {{ session.get('username', 'U')[0] | upper }}</div>
+            </div>
+        </div>
+        <div class="admin-content">
+            <main class="main-content">
+                <div class="card-container">
+                    <h1 class="title"><span class="gradient-text">Image Classification Terminal</span></h1>
+
+                    {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="flash-error-banner"
+                        style="margin: 0.5rem auto 1.5rem auto; padding: 1rem; border-radius: 12px; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); text-align: left; font-size: 0.95rem; color: #b91c1c; max-width: 500px; display: flex; gap: 0.6rem; align-items: flex-start;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" style="flex-shrink: 0; margin-top: 2px;">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <div>
+                            <strong style="display: block; margin-bottom: 2px;">Validation Error</strong>
+                            <span>{{ message }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+
+                    {% if filename or img_base64 %}
+                    <!-- AI Analysis Results Page -->
+                    <div id="result-card" class="result-card" style="width: 100%; max-width: 500px; margin: 0 auto;">
+                        <div
+                            style="width: 100%; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 1rem; margin-bottom: 0.5rem; text-align: center;">
+                            <h3
+                                style="font-size: 1.1rem; letter-spacing: 1px; text-transform: uppercase; color: var(--accent-emerald); font-weight: 700;">
+                                AI Analysis Result</h3>
+                        </div>
+
+                        <div class="result-image-wrapper">
+                            {% if img_base64 %}
+                            <img src="{{ img_base64 }}" alt="Analyzed Image" />
+                            {% else %}
+                            <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Analyzed Image" />
+                            {% endif %}
+                        </div>
+
+                        <div class="result-details" style="text-align:center;">
+                            <h3 style="color:#16a34a; text-transform: uppercase;">
+                                {{ breed_name if breed_name else 'Detection' }} Result
+                            </h3>
+                            <div class="prediction-badge"
+                                style="justify-content:space-between; margin-bottom:1rem; display: flex; width: 100%; align-items: center; padding: 10px 15px; box-sizing: border-box;">
+                                <span style="font-weight: 700; font-size: 1.05rem;">{{ result_name }}</span>
+                                {% if top_3_results and top_3_results|length > 0 %}
+                                <span
+                                    style="background: rgba(22, 163, 74, 0.2); padding: 4px 10px; border-radius: 6px; font-weight: bold; font-size: 1.05rem;">{{
+                                    top_3_results[0].confidence }}%</span>
+                                {% endif %}
+                            </div>
+
+                            {% if top_3_results and top_3_results|length > 1 %}
+                            <div
+                                style="margin-top: 1.5rem; text-align: left; background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05); border-radius: 8px; padding: 1rem;">
+                                <h4 style="color: var(--accent-emerald); margin-bottom: 0.8rem; font-size: 0.95rem;">
+                                    Other Possibilities:</h4>
+                                {% for res in top_3_results[1:] %}
+                                <div style="margin-bottom: 0.8rem;">
+                                    <div
+                                        style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.3rem;">
+                                        <span style="color: #333; font-weight: 500;">{{ res.name }}</span>
+                                        <span style="color: #333; font-weight: 500;">{{ res.confidence }}%</span>
+                                    </div>
+                                    <div
+                                        style="width: 100%; height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; overflow: hidden;">
+                                        <div
+                                            style="width: {{ res.confidence }}%; height: 100%; background: var(--accent-emerald); border-radius: 3px; transition: width 1s ease-in-out;">
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; width: 100%;">
+                        <a href="{{ url_for('detect') }}" class="btn-upload-next" style="margin-top: 1.5rem;">
+                            Upload Next Image
+                        </a>
+                    </div>
+                    {% else %}
+                    <!-- Upload Interface -->
+                    <p class="subtitle" style="margin-bottom: 1rem;">
+                        Upload, drag, or drop any image file. Our AI Gatekeeper will automatically analyze the image,
+                        classify it, and determine its specific breed.
+                    </p>
+
+                    <!-- Upload Form -->
+                    <form id="detect-form" class="upload-form" method="POST" action="{{ url_for('detect') }}"
+                        enctype="multipart/form-data">
+
+                        <input type="hidden" name="image_type" id="image_type" value="auto" />
+
+                        <!-- Drag and Drop Area -->
+                        <div id="drag-zone" class="drag-zone">
+                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <span class="upload-text" id="drag-text">Drag & drop your image here, or <span
+                                    style="color: var(--accent-emerald);">browse</span></span>
+                            <span class="upload-hint">Supports JPG, PNG, GIF, WebP, BMP, and TIFF</span>
+                            <input type="file" id="file-input" name="file" class="file-input" accept="image/*"
+                                required />
+                        </div>
+
+                        <!-- Quality & Validation Warnings -->
+                        <div id="quality-warning" class="quality-warning"
+                            style="display: none; margin: 1rem 0; padding: 1rem; border-radius: 12px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); text-align: left; font-size: 0.95rem; color: #b45309; width: 100%;">
+                            <div style="display: flex; gap: 0.6rem; align-items: flex-start;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" style="flex-shrink: 0; margin-top: 2px;">
+                                    <path
+                                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                                    </path>
+                                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                                <div>
+                                    <strong style="display: block; margin-bottom: 2px;">Image Warning</strong>
+                                    <span id="quality-msg">Please upload a clear image.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Preview Area -->
+                        <div id="preview-wrapper" class="preview-wrapper" style="display: none;">
+                            <div class="preview-container">
+                                <img id="preview-image" class="preview-preview" src="#" alt="Preview" />
+                                <button type="button" id="remove-file-btn" class="remove-btn" title="Remove image">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" id="submit-btn" class="btn-submit"
+                            style="display: none; align-self: center; margin-top: 1rem;">
+                            <span>Analyze Image</span>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="result-modal" class="result-modal"
+        data-open="{{ 'true' if result_name is defined and result_name else 'false' }}">
+        <div class="modal-content">
+            <button type="button" id="modal-close-btn" class="modal-close">×</button>
+            <h2 class="modal-header">Prediction Result</h2>
+            <p class="modal-message">{{ result_name if result_name is defined else '' }}</p>
+            <div class="modal-actions">
+                <a href="{{ url_for('detect') }}" class="btn-submit modal-action">Upload Next Image</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

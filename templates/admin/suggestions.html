@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> AI Suggestions & Dataset Health </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <style>
+        .dashboard-header { margin-bottom: 2rem; }
+        .dashboard-card { background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.02); margin-bottom: 2rem; }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); width: 40px; height: 40px; border-radius: 50%; border-left-color: var(--accent-cyan); animation: spin 1s linear infinite; margin: 2rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        select { padding: 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border); width: 250px; font-size: 1rem; outline: none; background: white; cursor: pointer; font-weight: bold; color: var(--accent-forest); }
+        .data-table-container { width: 100%; max-height: 500px; overflow-x: auto; overflow-y: auto; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.5); }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th, .data-table td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--glass-border); }
+        .data-table th { background: rgba(16, 185, 129, 0.95); color: white; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 10; }
+        .data-table tr:hover td { background: rgba(255, 255, 255, 0.8); }
+        .status-badge { padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+        .status-Good { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .status-Fair { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .status-Missing { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .health-summary { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+        .health-stat { flex: 1; min-width: 150px; background: rgba(255,255,255,0.7); padding: 1.5rem; border-radius: 12px; text-align: center; border: 1px solid var(--glass-border); }
+        .health-stat-value { font-size: 1.5rem; font-weight: bold; color: var(--accent-forest); margin: 0.5rem 0; }
+        .instruction-item { display: flex; align-items: flex-start; gap: 0.8rem; padding: 1rem; background: rgba(255,255,255,0.6); border: 1px solid var(--glass-border); border-radius: 12px; transition: transform 0.2s; }
+        .instruction-item:hover { transform: translateY(-2px); background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .instruction-icon { color: var(--accent-forest); background: rgba(16, 185, 129, 0.1); padding: 0.4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .instruction-text { font-size: 0.95rem; color: var(--text-main); line-height: 1.4; font-weight: 500; margin-top: 0.2rem; }
+    </style>
+    <style id="admin-styles">
+        body { margin: 0; padding: 0; display: flex; background: #f8fafc; }
+        .admin-sidebar { width: 260px; height: 100vh; background: white; border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+        .admin-main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; display: flex; flex-direction: column; }
+        .admin-topbar { height: 70px; background: white; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; position: fixed; top: 0; left: 260px; right: 0; z-index: 500; box-sizing: border-box; }
+        .sidebar-logo { padding: 1.5rem; display: flex; align-items: center; gap: 0.8rem; font-weight: bold; font-size: 1.2rem; color: var(--accent-forest); border-bottom: 1px solid var(--glass-border); }
+        .sidebar-menu { padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text-main); text-decoration: none; font-weight: 500; transition: all 0.3s; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(16, 185, 129, 0.1); color: var(--accent-forest); font-weight: 600; }
+        .admin-content { padding: 2rem; width: 100%; box-sizing: border-box; margin-top: 70px; }
+        .app-header { display: none !important; }
+        .main-content { margin: 0; padding: 0; width: 100%; max-width: 100%; }
+    </style>
+</head>
+<body>
+    {% include 'admin/admin_sidebar.html' %}
+    <div class="admin-main">
+        <div class="admin-topbar">
+            <div></div> <!-- Left empty spacer -->
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-weight: 600; color: var(--text-main);">Admin</span>
+                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--accent-forest); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer;">A</div>
+            </div>
+        </div>
+        <div class="admin-content">
+<main class="main-content" style="width: 100%; padding: 2rem; display: flex; flex-direction: column; gap: 2rem; box-sizing: border-box;">
+        <!-- TOP: SELECTION OPTIONS (HORIZONTAL) -->
+        <div style="background: rgba(16, 185, 129, 0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <label for="breed-select" style="font-weight: bold; color: var(--accent-forest); font-size: 1.1rem;">Select Model (Breed):</label>
+                <select id="breed-select" onchange="updateCategories()">
+                    <option value="none">-- Select Breed --</option>
+                </select>
+            </div>
+            <div id="category-container" style="display: flex; align-items: center; gap: 1rem;">
+                <label for="category-select" style="font-weight: bold; color: var(--accent-forest); font-size: 1.1rem;">Select Category:</label>
+                <select id="category-select" onchange="updateClasses()" disabled>
+                    <option value="all">-- All Categories --</option>
+                </select>
+            </div>
+            <div id="subfolder-container" style="display: flex; align-items: center; gap: 1rem;">
+                <label for="class-select" style="font-weight: bold; color: var(--accent-forest); font-size: 1.1rem;">Select Folder:</label>
+                <select id="class-select" onchange="fetchAnalysis()" disabled>
+                    <option value="all">-- All Folders --</option>
+                </select>
+            </div>
+        </div>
+        <!-- BOTTOM: LEFT (TEXT) & RIGHT (TABLE/RESULTS) -->
+        <div style="width: 100%;">
+            <div>
+                <div id="loading" style="display: none; text-align: center;">
+                    <div class="spinner"></div>
+                    <p style="color: var(--text-muted); font-weight: 500;">Analyzing dataset scenarios using Computer Vision patterns...</p>
+                </div>
+                <div id="results-container" style="display: none;">
+                    <div class="health-summary">
+                        <div class="health-stat">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Overall Health</div>
+                            <div class="health-stat-value" id="stat-health">Good</div>
+                        </div>
+                        <div class="health-stat">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Avg Coverage</div>
+                            <div class="health-stat-value" id="stat-coverage">0%</div>
+                        </div>
+                        <div class="health-stat">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Good Scenarios</div>
+                            <div class="health-stat-value" id="stat-well">0</div>
+                        </div>
+                        <div class="health-stat">
+                            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Missing Scenarios</div>
+                            <div class="health-stat-value" id="stat-missing" style="color: #ef4444;">0</div>
+                        </div>
+                    </div>
+                    <div class="dashboard-card" style="padding: 1.5rem;">
+                        <h3 style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main);">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-forest);"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            AI Action Plan
+                        </h3>
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">To improve accuracy, we recommend uploading new images matching the "Missing/Poor" scenarios below.</p>
+                        <div class="data-table-container" id="analysis-grid">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+                <div id="initial-state" style="text-align: center; padding: 4rem; color: var(--text-muted); border: 1px dashed var(--glass-border); border-radius: 12px; background: rgba(255,255,255,0.3);">
+                    Select a dataset from the top bar to generate AI suggestions.
+                </div>
+            </div>
+
+            <!-- 20 Camera Capture Instructions for AI Dataset -->
+            <div class="dashboard-card" style="padding: 2rem; margin-top: 2rem;">
+                <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent-forest);">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    20 Camera Capture Instructions for AI Dataset
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem;">Follow these guidelines when capturing images to ensure maximum accuracy and performance for the Dog Breed Identification AI model.</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                    
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Capture the dog's entire body in the frame.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Ensure the face is clearly visible.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Keep both ears visible and unobstructed.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Make sure the tail is visible, if possible.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Take the photo at the dog's eye level.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Use natural daylight or bright, even lighting.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Avoid blurry photos by keeping the camera steady.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Use a plain or uncluttered background.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Keep only one dog in the frame.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Make sure the dog is standing naturally.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Avoid extreme close-up or far-away shots.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Keep the head, body, and legs fully visible.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Avoid objects, people, or furniture blocking the dog.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Do not use filters, beauty mode, or heavy editing.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Keep the camera lens clean before taking the photo.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Capture the dog from the front or a 45° side angle.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">If possible, take multiple photos (front, side, full body).</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Ensure the photo is high resolution.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Avoid strong shadows, glare, or overexposed lighting.</div>
+                    </div>
+                    <div class="instruction-item">
+                        <div class="instruction-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="instruction-text">Wait until the dog is calm and still before capturing the image.</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        const datasetTree = {{ dataset_tree | tojson | safe }};
+        const breedSelect = document.getElementById('breed-select');
+        const categorySelect = document.getElementById('category-select');
+        const classSelect = document.getElementById('class-select');
+        const categoryContainer = document.getElementById('category-container');
+        const subfolderContainer = document.getElementById('subfolder-container');
+        document.addEventListener('DOMContentLoaded', () => {
+            initBreeds();
+            setTimeout(restoreSelections, 50);
+        });
+        
+        function restoreSelections() {
+            const savedBreed = sessionStorage.getItem('ai_suggestion_breed');
+            const savedCat = sessionStorage.getItem('ai_suggestion_cat');
+            const savedClass = sessionStorage.getItem('ai_suggestion_class');
+            
+            if (savedBreed && savedBreed !== 'none') {
+                breedSelect.value = savedBreed;
+                updateCategories(false);
+                
+                if (savedCat && savedCat !== 'all') {
+                    categorySelect.value = savedCat;
+                    updateClasses(false);
+                    
+                    if (savedClass) {
+                        classSelect.value = savedClass;
+                        fetchAnalysis(false);
+                    }
+                }
+            }
+        }
+        
+        function initBreeds() {
+            Object.keys(datasetTree).forEach(breed => {
+                const option = document.createElement('option');
+                option.value = breed;
+                option.textContent = breed.charAt(0).toUpperCase() + breed.slice(1);
+                breedSelect.appendChild(option);
+            });
+        }
+        window.updateCategories = function(fetch = true) {
+            sessionStorage.setItem('ai_suggestion_breed', breedSelect.value);
+            categorySelect.innerHTML = '<option value="all">-- All Categories --</option>';
+            classSelect.innerHTML = '<option value="all">-- All Folders --</option>';
+            const selectedBreed = breedSelect.value;
+            if (selectedBreed === 'none') {
+                categorySelect.disabled = true;
+                classSelect.disabled = true;
+                document.getElementById('results-container').style.display = 'none';
+                document.getElementById('initial-state').style.display = 'block';
+            } else {
+                categorySelect.disabled = false;
+                const categories = datasetTree[selectedBreed];
+                if (categories) {
+                    Object.keys(categories).forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        option.textContent = cat.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                        categorySelect.appendChild(option);
+                    });
+                }
+                if(fetch && categorySelect.value !== 'all') fetchAnalysis();
+            }
+        }
+        window.updateClasses = function(fetch = true) {
+            sessionStorage.setItem('ai_suggestion_cat', categorySelect.value);
+            classSelect.innerHTML = '<option value="all">-- All Folders --</option>';
+            const selectedBreed = breedSelect.value;
+            const selectedCat = categorySelect.value;
+            if (selectedCat === 'all' || selectedBreed === 'none') {
+                classSelect.disabled = true;
+            } else {
+                classSelect.disabled = false;
+                const classes = datasetTree[selectedBreed]?.[selectedCat];
+                if (classes) {
+                    Object.keys(classes).forEach(cls => {
+                        const option = document.createElement('option');
+                        option.value = cls;
+                        option.textContent = cls;
+                        classSelect.appendChild(option);
+                    });
+                }
+            }
+            if(fetch && selectedBreed !== 'none' && selectedCat !== 'all') {
+                fetchAnalysis();
+            }
+        }
+        window.fetchAnalysis = async function(save = true) {
+            if(save) sessionStorage.setItem('ai_suggestion_class', classSelect.value);
+            const breed = breedSelect.value;
+            const cat = categorySelect.value;
+            const cls = classSelect.value;
+            if (breed === 'none' || cat === 'all') return;
+            document.getElementById('initial-state').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results-container').style.display = 'none';
+            try {
+                const response = await fetch('/api/analyze_scenarios', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ breed: breed, category: cat, sub_folder: cls })
+                });
+                const data = await response.json();
+                document.getElementById('stat-health').textContent = data.summary.overall_health;
+                document.getElementById('stat-coverage').textContent = data.summary.avg_coverage + '%';
+                document.getElementById('stat-well').textContent = data.summary.well_represented;
+                document.getElementById('stat-missing').textContent = data.summary.missing_scenarios;
+                const grid = document.getElementById('analysis-grid');
+                let tableHtml = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Scenario / Condition</th>
+                                <th>Images Count</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                data.categories.forEach(catGroup => {
+                    catGroup.items.forEach(item => {
+                        let statusClass = item.status === 'Missing/Poor' ? 'status-Missing' : `status-${item.status}`;
+                        let icon = item.status === 'Good' ? '✅' : (item.status === 'Fair' ? '⚠️' : '❌');
+                        let countColor = item.count >= 100 ? '#10b981' : (item.count >= 50 ? '#f59e0b' : '#ef4444');
+                        tableHtml += `
+                            <tr>
+                                <td style="font-weight: bold; color: var(--text-main);">${catGroup.name}</td>
+                                <td>${item.scenario}</td>
+                                <td style="font-weight: bold; font-size: 1.05rem; color: ${countColor};">${item.count} / 100</td>
+                                <td>
+                                    <span class="status-badge ${statusClass}" style="display: inline-flex; align-items: center; gap: 0.4rem;">
+                                        ${icon} ${item.status}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                });
+                tableHtml += `
+                        </tbody>
+                    </table>
+                `;
+                grid.innerHTML = tableHtml;
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results-container').style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading').innerHTML = '<p style="color: red;">Failed to load analysis. Ensure backend is running.</p>';
+            }
+        }
+    </script>
+        </div>
+    </div>
+</body>
+</html>

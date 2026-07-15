@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> Admin Dashboard </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <style id="admin-styles">
+        body { margin: 0; padding: 0; display: flex; background: #f8fafc; }
+        .admin-sidebar { width: 260px; height: 100vh; background: white; border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+        .admin-main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; display: flex; flex-direction: column; }
+        .admin-topbar { height: 70px; background: white; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; position: fixed; top: 0; left: 260px; right: 0; z-index: 500; box-sizing: border-box; }
+        .sidebar-logo { padding: 1.5rem; display: flex; align-items: center; gap: 0.8rem; font-weight: bold; font-size: 1.2rem; color: var(--accent-forest); border-bottom: 1px solid var(--glass-border); }
+        .sidebar-menu { padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text-main); text-decoration: none; font-weight: 500; transition: all 0.3s; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(16, 185, 129, 0.1); color: var(--accent-forest); font-weight: 600; }
+        .admin-content { padding: 2rem; width: 100%; box-sizing: border-box; margin-top: 70px; }
+        .app-header { display: none !important; }
+        .main-content { margin: 0; padding: 0; width: 100%; max-width: 100%; }
+    </style>
+    <style>
+        .filter-row {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+        }
+        .filter-group label {
+            font-weight: 600;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.7);
+            color: var(--text-main);
+            font-size: 1rem;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .filter-select:focus {
+            border-color: var(--accent-forest);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        .data-table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .data-table th {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-forest);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .count-badge {
+            background: var(--accent-forest);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+    </style>
+</style>
+</head>
+<body>
+    {% include 'admin/admin_sidebar.html' %}
+    <div class="admin-main">
+        <div class="admin-topbar">
+            <div></div> <!-- Left empty spacer -->
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-weight: 600; color: var(--text-main);">Admin</span>
+                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--accent-forest); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer;">A</div>
+            </div>
+        </div>
+        <div class="admin-content">
+        <style>
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 1.5rem;
+                margin-top: 2rem;
+                width: 100%;
+            }
+            .stat-card {
+                background: white;
+                padding: 2rem;
+                border-radius: 16px;
+                border: 1px solid var(--glass-border);
+                box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+            .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0; left: 0; width: 100%; height: 4px;
+                background: linear-gradient(90deg, var(--accent-forest), #047857);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+            .stat-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 12px 24px rgba(16, 185, 129, 0.1);
+            }
+            .stat-card:hover::before {
+                opacity: 1;
+            }
+            .stat-value {
+                font-size: 3rem;
+                font-weight: 800;
+                background: linear-gradient(135deg, var(--accent-forest) 0%, #047857 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                margin-bottom: 0.5rem;
+            }
+            .stat-label {
+                font-size: 0.95rem;
+                color: var(--text-muted);
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                text-align: center;
+            }
+        </style>
+        <div class="dashboard-header" style="text-align: left; margin-bottom: 1rem;">
+            <h1 class="title" style="font-size: 2.5rem;"><span class="gradient-text">Overview</span></h1>
+            <p class="subtitle">Welcome back, Admin! Here is your dataset breakdown.</p>
+        </div>
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="grand-total-display">{{ stats.total_images }}</div>
+                <div class="stat-label">Total Images</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.model_count }}</div>
+                <div class="stat-label">Trained Models</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ stats.avg_accuracy }}</div>
+                <div class="stat-label">Accuracy Level</div>
+            </div>
+        </div>
+<div style="margin-top: 2rem; width: 100%;"><div class="dashboard-card">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="breed-select">Select Model (Breed)</label>
+                    <select id="breed-select" class="filter-select">
+                        <option value="all">-- All Models --</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="category-select">Select Category</label>
+                    <select id="category-select" class="filter-select" disabled>
+                        <option value="all">-- All Categories --</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="class-select">Select Folder (Class)</label>
+                    <select id="class-select" class="filter-select" disabled>
+                        <option value="all">-- All Folders --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="data-table-container">
+                <table class="data-table" id="dataset-table">
+                    <thead>
+                        <tr>
+                            <th>Model (Breed)</th>
+                            <th>Category</th>
+                            <th>Folder (Class)</th>
+                            <th>Images Count</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Populated dynamically via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+<script>
+        // Inject the dataset tree from Python
+        const datasetTree = {{ dataset_tree | tojson }};
+        const breedSelect = document.getElementById('breed-select');
+        const categorySelect = document.getElementById('category-select');
+        const classSelect = document.getElementById('class-select');
+        const tableBody = document.getElementById('table-body');
+        const grandTotalDisplay = document.getElementById('grand-total-display');
+        // Initialize Dropdown 1 (Breeds)
+        function initBreeds() {
+            Object.keys(datasetTree).forEach(breed => {
+                const option = document.createElement('option');
+                option.value = breed;
+                option.textContent = breed.charAt(0).toUpperCase() + breed.slice(1);
+                breedSelect.appendChild(option);
+            });
+            updateTable();
+        }
+        // Update Categories based on Breed selection
+        function updateCategories() {
+            categorySelect.innerHTML = '<option value="all">-- All Categories --</option>';
+            classSelect.innerHTML = '<option value="all">-- All Folders --</option>';
+            const selectedBreed = breedSelect.value;
+            if (selectedBreed === 'all') {
+                categorySelect.disabled = true;
+                classSelect.disabled = true;
+            } else {
+                categorySelect.disabled = false;
+                const categories = datasetTree[selectedBreed];
+                if (categories) {
+                    Object.keys(categories).forEach(cat => {
+                        const option = document.createElement('option');
+                        option.value = cat;
+                        // Format name nicely (e.g., dog_category -> Dog Category)
+                        option.textContent = cat.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                        categorySelect.appendChild(option);
+                    });
+                }
+            }
+            updateTable();
+        }
+        // Update Classes based on Category selection
+        function updateClasses() {
+            classSelect.innerHTML = '<option value="all">-- All Folders --</option>';
+            const selectedBreed = breedSelect.value;
+            const selectedCat = categorySelect.value;
+            if (selectedCat === 'all' || selectedBreed === 'all') {
+                classSelect.disabled = true;
+            } else {
+                classSelect.disabled = false;
+                const classes = datasetTree[selectedBreed]?.[selectedCat];
+                if (classes) {
+                    Object.keys(classes).forEach(cls => {
+                        const option = document.createElement('option');
+                        option.value = cls;
+                        option.textContent = cls;
+                        classSelect.appendChild(option);
+                    });
+                }
+            }
+            updateTable();
+        }
+        // Build the table based on selected filters
+        function updateTable() {
+            const selectedBreed = breedSelect.value;
+            const selectedCat = categorySelect.value;
+            const selectedCls = classSelect.value;
+            tableBody.innerHTML = '';
+            let currentTotal = 0;
+            let rows = [];
+            // Loop through the entire tree and filter
+            Object.entries(datasetTree).forEach(([breed, categories]) => {
+                if (selectedBreed !== 'all' && breed !== selectedBreed) return;
+                Object.entries(categories).forEach(([cat, classes]) => {
+                    if (selectedCat !== 'all' && cat !== selectedCat) return;
+                    Object.entries(classes).forEach(([cls, count]) => {
+                        if (selectedCls !== 'all' && cls !== selectedCls) return;
+                        currentTotal += count;
+                        const tr = document.createElement('tr');
+                        const formatName = (str) => str.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                        tr.innerHTML = `
+                            <td><strong>${formatName(breed)}</strong></td>
+                            <td>${formatName(cat)}</td>
+                            <td>${cls}</td>
+                            <td><span class="count-badge">${count}</span></td>
+                        `;
+                        rows.push(tr);
+                    });
+                });
+            });
+            if (rows.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="4"><div class="empty-state">No data found for selected filters.</div></td>`;
+                tableBody.appendChild(tr);
+            } else {
+                rows.forEach(r => tableBody.appendChild(r));
+            }
+            // Animate total counter update
+            grandTotalDisplay.textContent = currentTotal;
+        }
+        // Event Listeners
+        breedSelect.addEventListener('change', updateCategories);
+        categorySelect.addEventListener('change', updateClasses);
+        classSelect.addEventListener('change', updateTable);
+        // Boot
+        initBreeds();
+    </script>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

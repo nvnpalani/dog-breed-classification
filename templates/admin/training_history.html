@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> Training History </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <style id="admin-styles">
+        body { margin: 0; padding: 0; display: flex; background: #f8fafc; }
+        .admin-sidebar { width: 260px; height: 100vh; background: white; border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+        .admin-main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; display: flex; flex-direction: column; }
+        .admin-topbar { height: 70px; background: white; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; position: fixed; top: 0; left: 260px; right: 0; z-index: 500; box-sizing: border-box; }
+        .sidebar-logo { padding: 1.5rem; display: flex; align-items: center; gap: 0.8rem; font-weight: bold; font-size: 1.2rem; color: var(--accent-forest); border-bottom: 1px solid var(--glass-border); }
+        .sidebar-menu { padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text-main); text-decoration: none; font-weight: 500; transition: all 0.3s; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(16, 185, 129, 0.1); color: var(--accent-forest); font-weight: 600; }
+        .admin-content { padding: 2rem; width: 100%; box-sizing: border-box; margin-top: 70px; }
+        .app-header { display: none !important; }
+        .main-content { margin: 0; padding: 0; width: 100%; max-width: 100%; }
+    </style>
+</head>
+<body>
+    {% include 'admin/admin_sidebar.html' %}
+    <div class="admin-main">
+        <div class="admin-topbar">
+            <div></div> <!-- Left empty spacer -->
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-weight: 600; color: var(--text-main);">Admin</span>
+                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--accent-forest); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer;">A</div>
+            </div>
+        </div>
+        <div class="admin-content">
+<main class="main-content" style="width: 100%;">
+        <div class="dashboard-grid">
+            <div class="dashboard-card" style="width: 100%; box-sizing: border-box;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; position: relative; flex-wrap: wrap; gap: 1rem;">
+                    <h3 style="color: var(--accent-forest); margin: 0; text-align: left;">Current Training Details</h3>
+                    <button id="btn-toggle-filter" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); cursor: pointer; color: var(--accent-forest); display: flex; align-items: center; gap: 0.5rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 8px; transition: all 0.3s ease;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                        Filter
+                    </button>
+                    <div id="filter-popup" class="filter-panel" style="display: none; position: absolute; top: 100%; right: 0; margin-top: 10px; z-index: 100; width: 350px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 1.5rem; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--glass-border);">
+                        <h4 style="margin-bottom: 1rem; color: var(--accent-forest);">Filter Options</h4>
+                        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+                            <!-- Updated Dropdowns -->
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">Select Model (Breed)</label>
+                                <select id="filter-model" style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--glass-border); background: white;">
+                                    <option value="all">-- All Models --</option>
+                                    <!-- Populated via JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">Select Category</label>
+                                <select id="filter-category" style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--glass-border); background: white;" disabled>
+                                    <option value="all">-- All Categories --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">Select Folder</label>
+                                <select id="filter-folder" style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--glass-border); background: white;" disabled>
+                                    <option value="all">-- All Folders --</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 1rem;">
+                                <div style="flex: 1;">
+                                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">Start Date</label>
+                                    <input type="date" id="filter-start" style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--glass-border); background: white;">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">End Date</label>
+                                    <input type="date" id="filter-end" style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--glass-border); background: white;">
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">Year</label>
+                                <select id="filter-year" style="width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid var(--glass-border); background: white;">
+                                    <option value="all">All Years</option>
+                                    <option value="2024">2024</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                    <option value="2027">2027</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button id="btn-clear" style="padding: 0.6rem 1rem; border: 1px solid var(--glass-border); background: rgba(255,255,255,0.8); border-radius: 6px; cursor: pointer; color: var(--text-muted); font-weight: 600; width: 100%;">Clear</button>
+                            <button id="btn-filter" style="padding: 0.6rem 1rem; border: none; background: var(--accent-forest); color: white; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%;">Show Results</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive" style="overflow-x: auto;">
+                    <table class="history-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid rgba(16, 185, 129, 0.2);">
+                                <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Date & Time</th>
+                                <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Model Name</th>
+                                <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Trigger</th>
+                                <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Accuracy Change (Old ➔ New)</th>
+                                <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Lab Test Accuracy</th>
+                                <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Real Test Accuracy</th>
+                                <th style="padding: 1rem; color: var(--text-muted); font-weight: 600;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if history %}
+                            {% set seen_models = [] %}
+                            {% for item in history|reverse %}
+                            {% if item.status == 'Success' and item.model_name not in seen_models %}
+                            {% set _ = seen_models.append(item.model_name) %}
+                            <tr style="border-bottom: 1px dashed rgba(16, 185, 129, 0.1); transition: background 0.3s ease;">
+                                <td style="padding: 1rem; font-size: 0.95rem;">{{ item.date }}</td>
+                                <td style="padding: 1rem;">
+                                    <strong>{{ item.model_name }}</strong>
+                                    <span style="background: rgba(16, 185, 129, 0.1); color: var(--accent-forest); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem;">{{ item.version }}</span>
+                                </td>
+                                <td style="padding: 1rem; font-size: 0.95rem;">{{ item.category_trigger }}</td>
+                                <td style="padding: 1rem;">
+                                    <span style="color: var(--text-muted);">{{ item.old_accuracy }}%</span>
+                                    <span style="color: var(--accent-forest); margin: 0 5px;">➔</span>
+                                    <strong style="font-size: 1.1rem;">{{ item.new_accuracy }}%</strong>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <strong style="color: var(--accent-forest); font-size: 1.1rem;">{{ item.new_accuracy }}%</strong>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <strong style="color: {% if item.coverage >= 80 %}#10b981{% elif item.coverage >= 50 %}#f59e0b{% else %}#ef4444{% endif %}; font-size: 1.1rem;">
+                                        {{ item.real_time_accuracy }}%
+                                    </strong>
+                                </td>
+                                <td style="padding: 1rem;">
+                                    <span class="status-badge status-{{ item.status|lower }}">Active</span>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">No training history available yet.</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        const datasetTree = {{ dataset_tree | tojson | safe }};
+        const filterModel = document.getElementById('filter-model');
+        const filterCategory = document.getElementById('filter-category');
+        const filterFolder = document.getElementById('filter-folder');
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnFilter = document.getElementById('btn-filter');
+            const btnClear = document.getElementById('btn-clear');
+            const tableBody = document.querySelector('.history-table tbody');
+            const rows = tableBody.querySelectorAll('tr[style*="border-bottom"]');
+            function parseDate(dateString) {
+                return new Date(dateString.split(' ')[0]);
+            }
+            // Initialize Cascading Dropdowns
+            Object.keys(datasetTree).forEach(breed => {
+                const option = document.createElement('option');
+                option.value = breed.toLowerCase();
+                option.textContent = breed.charAt(0).toUpperCase() + breed.slice(1);
+                filterModel.appendChild(option);
+            });
+            filterModel.addEventListener('change', () => {
+                filterCategory.innerHTML = '<option value="all">-- All Categories --</option>';
+                filterFolder.innerHTML = '<option value="all">-- All Folders --</option>';
+                const selectedBreed = filterModel.value.toLowerCase();
+                if (selectedBreed === 'all') {
+                    filterCategory.disabled = true;
+                    filterFolder.disabled = true;
+                } else {
+                    filterCategory.disabled = false;
+                    // Find actual key in tree (case insensitive)
+                    const breedKey = Object.keys(datasetTree).find(k => k.toLowerCase() === selectedBreed) || selectedBreed;
+                    const categories = datasetTree[breedKey];
+                    if (categories) {
+                        Object.keys(categories).forEach(cat => {
+                            const option = document.createElement('option');
+                            option.value = cat.toLowerCase();
+                            option.textContent = cat.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                            filterCategory.appendChild(option);
+                        });
+                    }
+                }
+            });
+            filterCategory.addEventListener('change', () => {
+                filterFolder.innerHTML = '<option value="all">-- All Folders --</option>';
+                const selectedBreed = filterModel.value.toLowerCase();
+                const selectedCat = filterCategory.value.toLowerCase();
+                if (selectedCat === 'all' || selectedBreed === 'all') {
+                    filterFolder.disabled = true;
+                } else {
+                    filterFolder.disabled = false;
+                    const breedKey = Object.keys(datasetTree).find(k => k.toLowerCase() === selectedBreed) || selectedBreed;
+                    const catKey = Object.keys(datasetTree[breedKey] || {}).find(k => k.toLowerCase() === selectedCat) || selectedCat;
+                    const classes = datasetTree[breedKey]?.[catKey];
+                    if (classes) {
+                        Object.keys(classes).forEach(cls => {
+                            const option = document.createElement('option');
+                            option.value = cls.toLowerCase();
+                            option.textContent = cls;
+                            filterFolder.appendChild(option);
+                        });
+                    }
+                }
+            });
+            function applyFilters() {
+                const modelVal = filterModel.value.toLowerCase();
+                const catVal = filterCategory.value.toLowerCase();
+                const folVal = filterFolder.value.toLowerCase();
+                const startVal = document.getElementById('filter-start').value;
+                const endVal = document.getElementById('filter-end').value;
+                const yearVal = document.getElementById('filter-year').value;
+                let startDt = startVal ? new Date(startVal) : null;
+                let endDt = endVal ? new Date(endVal) : null;
+                let visibleCount = 0;
+                rows.forEach(row => {
+                    if (!row.cells || row.cells.length < 6) return;
+                    const dateText = row.cells[0].innerText.trim();
+                    const rowDate = parseDate(dateText);
+                    const rowYear = rowDate.getFullYear().toString();
+                    const modelNameText = row.cells[1].querySelector('strong').innerText.trim().toLowerCase();
+                    const triggerText = row.cells[2].innerText.trim().toLowerCase();
+                    let show = true;
+                    // Text-based filtering for history logs
+                    if (modelVal !== 'all' && !modelNameText.includes(modelVal)) show = false;
+                    if (catVal !== 'all' && !triggerText.includes(catVal.replace('_', ' '))) show = false;
+                    if (folVal !== 'all' && !triggerText.includes(folVal)) show = false;
+                    if (yearVal !== 'all' && rowYear !== yearVal) show = false;
+                    if (startDt && rowDate < startDt) show = false;
+                    if (endDt && rowDate > endDt) show = false;
+                    if (show) {
+                        row.style.display = 'table-row';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                let noResultRow = document.getElementById('no-result-row');
+                if (visibleCount === 0 && rows.length > 0) {
+                    if (!noResultRow) {
+                        noResultRow = document.createElement('tr');
+                        noResultRow.id = 'no-result-row';
+                        noResultRow.innerHTML = '<td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">No training history matches your filters.</td>';
+                        tableBody.appendChild(noResultRow);
+                    } else {
+                        noResultRow.style.display = 'table-row';
+                    }
+                } else if (noResultRow) {
+                    noResultRow.style.display = 'none';
+                }
+            }
+            function clearFilters() {
+                filterModel.value = 'all';
+                filterCategory.innerHTML = '<option value="all">-- All Categories --</option>';
+                filterCategory.disabled = true;
+                filterFolder.innerHTML = '<option value="all">-- All Folders --</option>';
+                filterFolder.disabled = true;
+                document.getElementById('filter-start').value = '';
+                document.getElementById('filter-end').value = '';
+                document.getElementById('filter-year').value = 'all';
+                applyFilters();
+            }
+            btnFilter.addEventListener('click', () => {
+                applyFilters();
+                document.getElementById('filter-popup').style.display = 'none';
+            });
+            btnClear.addEventListener('click', clearFilters);
+            document.getElementById('btn-toggle-filter').addEventListener('click', () => {
+                const popup = document.getElementById('filter-popup');
+                popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+    </script>
+        </div>
+    </div>
+        </div>
+    </div>
+</body>
+</html>

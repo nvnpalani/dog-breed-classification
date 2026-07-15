@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Management - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <style id="admin-styles">
+        body { margin: 0; padding: 0; display: flex; background: #f8fafc; }
+        .admin-sidebar { width: 260px; height: 100vh; background: white; border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
+        .admin-main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; display: flex; flex-direction: column; }
+        .admin-topbar { height: 70px; background: white; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; position: fixed; top: 0; left: 260px; right: 0; z-index: 500; box-sizing: border-box; }
+        .sidebar-logo { padding: 1.5rem; display: flex; align-items: center; gap: 0.8rem; font-weight: bold; font-size: 1.2rem; color: var(--accent-forest); border-bottom: 1px solid var(--glass-border); }
+        .sidebar-menu { padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text-main); text-decoration: none; font-weight: 500; transition: all 0.3s; }
+        .sidebar-link:hover, .sidebar-link.active { background: rgba(16, 185, 129, 0.1); color: var(--accent-forest); font-weight: 600; }
+        .admin-content { padding: 2rem; width: 100%; box-sizing: border-box; margin-top: 70px; }
+        .app-header { display: none !important; }
+        .main-content { margin: 0; padding: 0; width: 100%; max-width: 100%; display: block !important; }
+        
+        .data-table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.5);
+            margin-top: 2rem;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .data-table th,
+        .data-table td {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .data-table th {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-forest);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .count-badge {
+            background: var(--accent-forest);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 99px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: inline-block;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            min-width: 250px;
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-forest);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stat-info h3 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-info p {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+    {% include 'admin/admin_sidebar.html' %}
+
+    <div class="admin-main">
+        <div class="admin-topbar">
+            <div></div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span style="font-weight: 600; color: var(--text-main);">Admin</span>
+                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--accent-forest); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer;">A</div>
+            </div>
+        </div>
+
+        <div class="admin-content">
+            <main class="main-content">
+                <div class="page-header">
+                    <h1 class="title"><span class="gradient-text">User Management</span></h1>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Users</h3>
+                            <p>{{ users|length }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Registration Date</th>
+                                <th>Total Logins</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if users %}
+                                {% for uid, user in users.items() %}
+                                <tr>
+                                    <td><span style="font-weight: 500; color: var(--text-main);">{{ user.username }}</span></td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.registration_date }}</td>
+                                    <td><span class="count-badge">{{ user.login_count }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4">
+                                        <div class="empty-state">
+                                            No users registered yet.
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+</body>
+</html>
