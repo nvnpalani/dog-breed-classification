@@ -166,7 +166,11 @@
 </head>
 <body>
 
-    <div class="login-container">
+    <div class="login-container" style="position: relative;">
+        <!-- Back Arrow -->
+        <a href="{{ url_for('index') }}" style="position: absolute; top: 1.5rem; left: 1.5rem; color: #6b7280; text-decoration: none; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: #f3f4f6; transition: all 0.3s;" onmouseover="this.style.background='#e5e7eb'; this.style.color='#10b981';" onmouseout="this.style.background='#f3f4f6'; this.style.color='#6b7280';">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </a>
         <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="url(#brand-gradient-index)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 48px; height: 48px;">
             <defs>
                 <linearGradient id="brand-gradient-index" x1="0%" y1="0%" x2="100%" y2="100%">

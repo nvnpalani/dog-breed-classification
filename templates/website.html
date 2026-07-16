@@ -654,14 +654,98 @@
             color: #d1d5db;
             font-size: 0.85rem;
         }
+
+        /* Hamburger Menu */
+        .hamburger-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            cursor: pointer;
+        }
+
+        /* Responsive Media Queries */
+        @media (max-width: 1024px) {
+            body, html { overflow-x: hidden; } /* Prevent horizontal scroll causing whitespace */
+            .navbar .container { padding: 15px 30px; align-items: center; }
+            .hamburger-btn { display: block; margin-left: 10px; }
+            .nav-links { 
+                display: none; 
+                flex-direction: column; 
+                position: absolute; 
+                top: 75px; 
+                left: 0; 
+                width: 100%; 
+                background: white; 
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1); 
+                padding: 20px 0; 
+                gap: 15px; 
+                text-align: center; 
+                border-top: 1px solid var(--border-color); 
+            }
+            .nav-links.show-menu { display: flex !important; }
+            
+            .hero-content h1 { font-size: 2.8rem !important; }
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 30px; }
+            .about .container { flex-direction: column; text-align: center; gap: 40px; }
+            .how-it-works-content { flex-direction: column; gap: 40px; }
+            .steps-container::before { display: none; }
+            .dashboard-stats-bar { flex-wrap: wrap; gap: 20px; justify-content: center !important; }
+            .hero-content-wrapper { flex-direction: column; text-align: center; }
+            .hero-content { padding: 30px !important; margin: 0 auto; }
+            .hero-buttons { justify-content: center; }
+            .hero-image-right { width: 100%; display: flex; justify-content: center; margin-top: 20px; }
+            .btn { padding: 8px 16px; font-size: 0.95rem; }
+        }
+
+        @media (max-width: 768px) {
+            .navbar .container { flex-direction: row !important; justify-content: space-between; padding: 12px 15px; align-items: center; }
+            
+            /* Shrink logo and buttons for mobile navbar */
+            .logo { font-size: 1.05rem; }
+            .logo-icon { width: 26px; height: 26px; font-size: 13px; }
+            .nav-actions { gap: 8px; display: flex; align-items: center; }
+            .mobile-btn { 
+                padding: 6px 14px !important; 
+                font-size: 0.85rem !important; 
+                display: flex !important; 
+                align-items: center; 
+                justify-content: center; 
+                height: 32px; 
+                box-sizing: border-box;
+                white-space: nowrap;
+            }
+            
+            .hamburger-btn { margin-left: 5px; }
+            .hero { padding-top: 110px !important; }
+            .hero-content h1 { font-size: 2.2rem !important; }
+            .hero-buttons { flex-wrap: wrap; }
+            .features-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; text-align: center; }
+            .footer-logo { justify-content: center; }
+            .social-icons { justify-content: center; margin: 20px auto; } /* Center social icons */
+            .contact-info { display: inline-block; text-align: left; }
+            .contact-info li { display: flex; align-items: center; justify-content: flex-start; gap: 12px; margin-bottom: 15px; }
+            .contact-info li i { width: 20px; text-align: center; margin-right: 0 !important; }
+            .cta-banner .container { flex-direction: column; text-align: center; gap: 20px; }
+            .cta-left { flex-direction: column; }
+            .step { flex-direction: column; text-align: center; }
+            .dashboard-stats-bar { flex-direction: column; align-items: center; text-align: center; }
+            .dashboard-stats-bar > div { flex-direction: column; text-align: center; }
+            .model-badge { margin-bottom: 15px; margin-right: 0; }
+            .ai-scanner-container { max-width: 100%; }
+            .section-header h2 { font-size: 1.6rem; }
+        }
     </style>
 </head>
 
 <body>
 
-    <!-- Navbar -->
     <header class="navbar">
         <div class="container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <!-- Logo (Left) -->
             <a href="{{ url_for('index') }}" class="logo">
                 <div class="logo-icon"><i class="fa-solid fa-dog"></i></div>
                 <div style="display: flex; flex-direction: column; line-height: 1.1;">
@@ -670,16 +754,25 @@
                         Identification</span>
                 </div>
             </a>
-            <ul class="nav-links">
-                <li><a href="#hero" class="active">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#contact">Contact</a></li>
+            
+            <!-- Nav Links (Center, hidden on mobile) -->
+            <ul class="nav-links" id="mobileMenu">
+                <li><a href="#hero" class="active" onclick="document.getElementById('mobileMenu').classList.remove('show-menu')">Home</a></li>
+                <li><a href="#about" onclick="document.getElementById('mobileMenu').classList.remove('show-menu')">About</a></li>
+                <li><a href="#features" onclick="document.getElementById('mobileMenu').classList.remove('show-menu')">Features</a></li>
+                <li><a href="#how-it-works" onclick="document.getElementById('mobileMenu').classList.remove('show-menu')">How It Works</a></li>
+                <li><a href="#contact" onclick="document.getElementById('mobileMenu').classList.remove('show-menu')">Contact</a></li>
             </ul>
-            <div class="nav-actions">
-                <a href="{{ url_for('login') }}" class="btn btn-outline">Login</a>
-                <a href="{{ url_for('signup') }}" class="btn btn-primary">Sign Up</a>
+            
+            <!-- Actions (Right) -->
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="nav-actions">
+                    <a href="{{ url_for('login') }}" class="btn btn-outline mobile-btn">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-primary mobile-btn">Sign Up</a>
+                </div>
+                <button class="hamburger-btn" onclick="document.getElementById('mobileMenu').classList.toggle('show-menu')">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
             </div>
         </div>
     </header>
@@ -788,7 +881,7 @@
         </style>
         <div class="container" style="display: flex; flex-direction: column; gap: 40px;">
             <!-- Top part: Text & Images -->
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 30px;">
+            <div class="hero-content-wrapper" style="display: flex; align-items: center; justify-content: space-between; gap: 30px;">
                 <div class="hero-content"
                     style="max-width: 550px; padding: 40px; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(15px); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05); position: relative; z-index: 10;">
                     <div class="stats-badge"

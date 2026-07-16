@@ -7,13 +7,6 @@
     <title> Image Detection </title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
     <style id="admin-styles">
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            background: #f8fafc;
-        }
-
         {% if is_deployed %}
         .admin-sidebar {
             display: none !important;
@@ -37,108 +30,7 @@
             box-sizing: border-box;
             margin-top: 0 !important;
         }
-        {% else %}
-        .admin-sidebar {
-            width: 260px;
-            height: 100vh;
-            background: white;
-            border-right: 1px solid var(--glass-border);
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 100;
-        }
-
-        .admin-main {
-            margin-left: 260px;
-            width: calc(100% - 260px);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .admin-topbar {
-            height: 70px;
-            background: white;
-            border-bottom: 1px solid var(--glass-border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 2rem;
-            position: fixed;
-            top: 0;
-            left: 260px;
-            right: 0;
-            z-index: 500;
-            box-sizing: border-box;
-        }
-
-        .admin-content {
-            padding: 2rem;
-            width: 100%;
-            box-sizing: border-box;
-            margin-top: 70px;
-        }
         {% endif %}
-
-        .sidebar-logo {
-            padding: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: var(--accent-forest);
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .sidebar-menu {
-            padding: 1.5rem 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            flex-grow: 1;
-        }
-
-        .sidebar-link {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.8rem 1rem;
-            border-radius: 8px;
-            color: var(--text-main);
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .sidebar-link:hover,
-        .sidebar-link.active {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--accent-forest);
-            font-weight: 600;
-        }
-
-        .app-header {
-            display: none !important;
-        }
-
-        .main-content {
-            margin: 0 auto;
-            padding: 0;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        .card-container {
-            max-width: 900px !important;
-            width: 100%;
-            margin: 0 auto;
-        }
     </style>
 </head>
 
@@ -149,6 +41,7 @@
         <p class="loading-text">Analyzing your image...</p>
     </div>
 
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="document.querySelector('.admin-sidebar').classList.remove('show'); this.classList.remove('show');"></div>
     <div class="admin-sidebar">
         <div class="sidebar-logo">
             <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="url(#bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px;">
@@ -182,16 +75,7 @@
             </a>
         </div>
         <div class="sidebar-menu" style="border-top: 1px solid var(--glass-border); flex-grow: 0;">
-            <a href="#" class="sidebar-link">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path
-                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                    </path>
-                </svg>
-                Settings
-            </a>
+          
             <a href="{{ url_for('logout') }}" class="sidebar-link" style="color: #ef4444;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -205,7 +89,11 @@
     </div>
     <div class="admin-main">
         <div class="admin-topbar">
-            <div></div>
+            <div style="display: flex; align-items: center;">
+                <button class="mobile-menu-btn" onclick="document.querySelector('.admin-sidebar').classList.toggle('show'); document.getElementById('sidebar-overlay').classList.toggle('show');">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+            </div>
             <div style="display: flex; align-items: center; gap: 1rem;">
                 <span style="font-weight: 600; color: var(--text-main);">{{ session.get('username', 'User') }}</span>
                 <div

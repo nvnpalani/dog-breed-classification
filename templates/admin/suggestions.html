@@ -28,25 +28,17 @@
         .instruction-icon { color: var(--accent-forest); background: rgba(16, 185, 129, 0.1); padding: 0.4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .instruction-text { font-size: 0.95rem; color: var(--text-main); line-height: 1.4; font-weight: 500; margin-top: 0.2rem; }
     </style>
-    <style id="admin-styles">
-        body { margin: 0; padding: 0; display: flex; background: #f8fafc; }
-        .admin-sidebar { width: 260px; height: 100vh; background: white; border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; z-index: 100; }
-        .admin-main { margin-left: 260px; width: calc(100% - 260px); min-height: 100vh; display: flex; flex-direction: column; }
-        .admin-topbar { height: 70px; background: white; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; position: fixed; top: 0; left: 260px; right: 0; z-index: 500; box-sizing: border-box; }
-        .sidebar-logo { padding: 1.5rem; display: flex; align-items: center; gap: 0.8rem; font-weight: bold; font-size: 1.2rem; color: var(--accent-forest); border-bottom: 1px solid var(--glass-border); }
-        .sidebar-menu { padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1; }
-        .sidebar-link { display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1rem; border-radius: 8px; color: var(--text-main); text-decoration: none; font-weight: 500; transition: all 0.3s; }
-        .sidebar-link:hover, .sidebar-link.active { background: rgba(16, 185, 129, 0.1); color: var(--accent-forest); font-weight: 600; }
-        .admin-content { padding: 2rem; width: 100%; box-sizing: border-box; margin-top: 70px; }
-        .app-header { display: none !important; }
-        .main-content { margin: 0; padding: 0; width: 100%; max-width: 100%; }
-    </style>
+    <!-- Admin styles moved to static/style.css -->
 </head>
 <body>
     {% include 'admin/admin_sidebar.html' %}
     <div class="admin-main">
         <div class="admin-topbar">
-            <div></div> <!-- Left empty spacer -->
+            <div style="display: flex; align-items: center;">
+                <button class="mobile-menu-btn" onclick="document.querySelector('.admin-sidebar').classList.toggle('show'); document.getElementById('sidebar-overlay').classList.toggle('show');">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+            </div>
             <div style="display: flex; align-items: center; gap: 1rem;">
                 <span style="font-weight: 600; color: var(--text-main);">Admin</span>
                 <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--accent-forest); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; cursor: pointer;">A</div>
@@ -55,22 +47,22 @@
         <div class="admin-content">
 <main class="main-content" style="width: 100%; padding: 2rem; display: flex; flex-direction: column; gap: 2rem; box-sizing: border-box;">
         <!-- TOP: SELECTION OPTIONS (HORIZONTAL) -->
-        <div style="background: rgba(16, 185, 129, 0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap; width: 100%;">
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <label for="breed-select" style="font-weight: bold; color: var(--accent-forest); font-size: 1.1rem;">Select Model (Breed):</label>
-                <select id="breed-select" onchange="updateCategories()">
+        <div class="filter-row" style="background: rgba(16, 185, 129, 0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); width: 100%; box-sizing: border-box; margin-bottom: 0;">
+            <div class="filter-group">
+                <label for="breed-select" style="color: var(--accent-forest);">Select Model (Breed):</label>
+                <select id="breed-select" style="width: 100%;" onchange="updateCategories()">
                     <option value="none">-- Select Breed --</option>
                 </select>
             </div>
-            <div id="category-container" style="display: flex; align-items: center; gap: 1rem;">
-                <label for="category-select" style="font-weight: bold; color: var(--accent-forest); font-size: 1.1rem;">Select Category:</label>
-                <select id="category-select" onchange="updateClasses()" disabled>
+            <div id="category-container" class="filter-group">
+                <label for="category-select" style="color: var(--accent-forest);">Select Category:</label>
+                <select id="category-select" style="width: 100%;" onchange="updateClasses()" disabled>
                     <option value="all">-- All Categories --</option>
                 </select>
             </div>
-            <div id="subfolder-container" style="display: flex; align-items: center; gap: 1rem;">
-                <label for="class-select" style="font-weight: bold; color: var(--accent-forest); font-size: 1.1rem;">Select Folder:</label>
-                <select id="class-select" onchange="fetchAnalysis()" disabled>
+            <div id="subfolder-container" class="filter-group">
+                <label for="class-select" style="color: var(--accent-forest);">Select Folder:</label>
+                <select id="class-select" style="width: 100%;" onchange="fetchAnalysis()" disabled>
                     <option value="all">-- All Folders --</option>
                 </select>
             </div>
